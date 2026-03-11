@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grotap Platform — App Report</title>
+<title>Grotap Team Communication</title>
 <style>
   :root {
     --bg: #0f1117;
     --card: #1a1d27;
+    --card-hover: #22253a;
     --border: #2a2d3a;
     --accent: #6366f1;
     --accent2: #818cf8;
@@ -27,992 +28,301 @@
     background: var(--bg);
     color: var(--text);
     line-height: 1.6;
-    padding: 2rem;
+    min-height: 100vh;
   }
-  .container { max-width: 1200px; margin: 0 auto; }
 
   /* Header */
-  .report-header {
+  .page-header {
     text-align: center;
-    padding: 3rem 2rem;
+    padding: 3rem 2rem 2rem;
     border-bottom: 1px solid var(--border);
-    margin-bottom: 3rem;
+    background: linear-gradient(180deg, #141620 0%, var(--bg) 100%);
   }
-  .report-header h1 {
+  .page-header .logo {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--accent2);
+    margin-bottom: 0.75rem;
+  }
+  .page-header h1 {
     font-size: 2.5rem;
     font-weight: 800;
     background: linear-gradient(135deg, var(--accent), var(--cyan));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 0.5rem;
   }
-  .report-header .subtitle {
+  .page-header .subtitle {
     color: var(--muted);
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+    max-width: 600px;
+    margin: 0 auto;
   }
-  .report-header .date {
-    color: var(--dim);
-    font-size: 0.85rem;
-    margin-top: 0.5rem;
-  }
-
-  /* Stats bar */
-  .stats-bar {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 1rem;
-    margin-bottom: 3rem;
-  }
-  .stat-card {
+  .page-header .report-count {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.35rem 1rem;
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.25rem;
-    text-align: center;
-  }
-  .stat-card .num {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--accent2);
-  }
-  .stat-card .label {
+    border-radius: 20px;
     font-size: 0.8rem;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    color: var(--dim);
   }
-
-  /* Sections */
-  .section {
-    margin-bottom: 3rem;
-  }
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--border);
-  }
-  .section-header h2 {
-    font-size: 1.5rem;
+  .page-header .report-count span {
+    color: var(--accent2);
     font-weight: 700;
   }
-  .section-header .section-icon {
-    font-size: 1.5rem;
-  }
-  .section-desc {
-    color: var(--muted);
-    margin-bottom: 1.5rem;
-    font-size: 0.95rem;
-    max-width: 800px;
+
+  /* Container */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
   }
 
-  /* App table */
-  .app-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    background: var(--card);
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    margin-bottom: 1.5rem;
-  }
-  .app-table thead th {
-    background: rgba(99, 102, 241, 0.1);
-    padding: 0.75rem 1rem;
-    text-align: left;
+  /* Section labels */
+  .section-label {
     font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--muted);
     font-weight: 600;
-    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--dim);
+    margin-bottom: 1rem;
+    padding-left: 1.75rem;
   }
-  .app-table tbody td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--border);
-    font-size: 0.9rem;
-    vertical-align: middle;
+  .section-label.latest {
+    color: var(--green);
   }
-  .app-table tbody tr:last-child td { border-bottom: none; }
-  .app-table tbody tr:hover { background: rgba(99, 102, 241, 0.05); }
 
-  .app-name {
+  /* Report entry */
+  .report-entry {
+    display: block;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 1rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .report-entry:hover {
+    background: var(--card-hover);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.1);
+  }
+  .report-entry.latest-entry {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, var(--card) 0%, #1e2140 100%);
+  }
+  .report-entry.latest-entry:hover {
+    border-color: var(--accent2);
+  }
+
+  .report-entry .entry-top {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
   }
-  .app-icon { font-size: 1.2rem; }
-
-  /* Badges */
-  .badge {
-    display: inline-block;
-    padding: 0.15rem 0.5rem;
-    border-radius: 999px;
+  .report-entry .entry-date {
+    font-size: 0.8rem;
+    color: var(--dim);
+    font-weight: 500;
+  }
+  .report-entry .entry-badge {
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-  .badge-beta { background: rgba(234, 179, 8, 0.15); color: var(--yellow); border: 1px solid rgba(234, 179, 8, 0.3); }
-  .badge-active { background: rgba(34, 197, 94, 0.15); color: var(--green); border: 1px solid rgba(34, 197, 94, 0.3); }
-  .badge-internal { background: rgba(236, 72, 153, 0.15); color: var(--pink); border: 1px solid rgba(236, 72, 153, 0.3); }
-  .badge-admin { background: rgba(239, 68, 68, 0.15); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
-  .badge-mobile { background: rgba(6, 182, 212, 0.15); color: var(--cyan); border: 1px solid rgba(6, 182, 212, 0.3); }
-  .badge-free { background: rgba(34, 197, 94, 0.1); color: var(--green); border: 1px solid rgba(34, 197, 94, 0.2); }
-  .badge-paid { background: rgba(249, 115, 22, 0.15); color: var(--orange); border: 1px solid rgba(249, 115, 22, 0.3); }
-  .badge-branch { background: rgba(99, 102, 241, 0.15); color: var(--accent2); border: 1px solid rgba(99, 102, 241, 0.3); }
-  .badge-blocked { background: rgba(239, 68, 68, 0.15); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
-
-  .brand-tag {
-    display: inline-block;
-    padding: 0.1rem 0.4rem;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    font-weight: 500;
-    background: rgba(99, 102, 241, 0.1);
+    letter-spacing: 1px;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    background: rgba(99, 102, 241, 0.15);
     color: var(--accent2);
-    border: 1px solid rgba(99, 102, 241, 0.2);
   }
-  .brand-tag.agents {
-    background: rgba(6, 182, 212, 0.1);
-    color: var(--cyan);
-    border-color: rgba(6, 182, 212, 0.2);
+  .report-entry .entry-badge.new {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--green);
   }
-
-  /* Prose sections */
-  .prose {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.5rem 2rem;
-    margin-bottom: 1.5rem;
-  }
-  .prose h3 {
-    font-size: 1.1rem;
+  .report-entry .entry-title {
+    font-size: 1.25rem;
     font-weight: 700;
-    margin-bottom: 0.75rem;
-    color: var(--accent2);
-  }
-  .prose p {
-    color: var(--muted);
-    margin-bottom: 0.75rem;
-    font-size: 0.92rem;
-  }
-  .prose p:last-child { margin-bottom: 0; }
-  .prose ul {
-    color: var(--muted);
-    margin: 0.5rem 0 0.75rem 1.5rem;
-    font-size: 0.92rem;
-  }
-  .prose li { margin-bottom: 0.3rem; }
-  .prose strong { color: var(--text); }
-
-  /* Relationship diagram */
-  .relationship-box {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-  }
-  .relationship-box h4 {
-    font-size: 0.95rem;
-    color: var(--accent2);
+    color: var(--text);
     margin-bottom: 0.5rem;
   }
-  .rel-flow {
+  .report-entry .entry-summary {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .report-entry .entry-footer {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+  .report-entry .entry-tags {
+    display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
-    padding: 0.5rem 0;
   }
-  .rel-node {
-    background: rgba(99, 102, 241, 0.1);
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    border-radius: 8px;
-    padding: 0.4rem 0.75rem;
-    font-size: 0.85rem;
-    font-weight: 500;
-    white-space: nowrap;
+  .report-entry .tag {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--dim);
   }
-  .rel-arrow { color: var(--dim); font-size: 1.2rem; }
+  .report-entry .view-link {
+    font-size: 0.8rem;
+    color: var(--accent2);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .report-entry .view-link .arrow {
+    transition: transform 0.2s ease;
+  }
+  .report-entry:hover .view-link .arrow {
+    transform: translateX(3px);
+  }
 
-  .check { color: var(--green); }
-  .cross { color: var(--dim); }
+  /* Timeline */
+  .timeline {
+    position: relative;
+    padding-left: 1.5rem;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+    border-radius: 1px;
+  }
+  .timeline .report-entry {
+    position: relative;
+  }
+  .timeline .report-entry::before {
+    content: '';
+    position: absolute;
+    left: -1.5rem;
+    top: 1.75rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--bg);
+    transform: translateX(-4px);
+  }
+  .timeline .report-entry.latest-entry::before {
+    background: var(--accent);
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+  }
 
-  @media (max-width: 768px) {
-    body { padding: 1rem; }
-    .report-header h1 { font-size: 1.8rem; }
-    .app-table { font-size: 0.8rem; }
-    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  /* Month dividers */
+  .month-divider {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--dim);
+    padding: 1.5rem 0 0.75rem 0;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+  .month-divider:first-child {
+    padding-top: 0.5rem;
+  }
+
+  /* Footer */
+  .page-footer {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--dim);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--border);
+    margin-top: 2rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .page-header h1 { font-size: 1.75rem; }
+    .container { padding: 1rem; }
+    .report-entry { padding: 1.25rem; }
+    .report-entry .entry-title { font-size: 1.1rem; }
+    .report-entry .entry-footer { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
   }
 </style>
 </head>
 <body>
+
+<header class="page-header">
+  <div class="logo">Grotap</div>
+  <h1>Grotap Operational Report</h1>
+  <p class="subtitle">Team communication hub — all published reports in one place, newest first.</p>
+  <div class="report-count"><span>1</span> report published</div>
+</header>
+
 <div class="container">
 
-  <!-- Header -->
-  <div class="report-header">
-    <h1>Grotap Platform App Report</h1>
-    <div class="subtitle">Complete Application Inventory &amp; System Architecture</div>
-    <div class="date">Generated 2026-03-11 &bull; Platform v4 &bull; 22 Apps Cataloged</div>
-  </div>
+  <div class="section-label latest">Latest Report</div>
 
-  <!-- Stats -->
-  <div class="stats-bar">
-    <div class="stat-card"><div class="num">22</div><div class="label">Total Apps</div></div>
-    <div class="stat-card"><div class="num">19</div><div class="label">Active</div></div>
-    <div class="stat-card"><div class="num">3</div><div class="label">Beta</div></div>
-    <div class="stat-card"><div class="num">5</div><div class="label">Internal</div></div>
-    <div class="stat-card"><div class="num">7</div><div class="label">Mobile</div></div>
-    <div class="stat-card"><div class="num">2</div><div class="label">Brands</div></div>
-    <div class="stat-card"><div class="num">39+</div><div class="label">API Routers</div></div>
-    <div class="stat-card"><div class="num">1</div><div class="label">In Branches</div></div>
-  </div>
+  <div class="timeline">
 
-  <!-- ============================================================ -->
-  <!-- SECTION 1: MANAGING MACHINES THAT BUILD MACHINES -->
-  <!-- ============================================================ -->
-  <div class="section">
-    <div class="section-header">
-      <span class="section-icon">&#9881;</span>
-      <h2>Managing Machines That Build Machines</h2>
-    </div>
-    <div class="section-desc">
-      These apps are purpose-built for the Grotap operations team to run, monitor, and scale the autonomous agent infrastructure. They are the control layer &mdash; the tools that let humans steer the fleet of AI agents that build the platform itself.
-    </div>
+    <!-- ============================================== -->
+    <!-- REPORT ENTRIES — Newest on top, oldest below   -->
+    <!--                                                -->
+    <!-- To add a new report:                           -->
+    <!--   1. Copy a report-entry block                 -->
+    <!--   2. Paste it below the month-divider at top   -->
+    <!--   3. Add class="latest-entry" to the new one   -->
+    <!--   4. Remove "latest-entry" from the old one    -->
+    <!--   5. Change old entry badge from "new" to ""   -->
+    <!--   6. Update the report-count in the header     -->
+    <!--   7. Add a new month-divider if new month      -->
+    <!--   8. Reports are NEVER deleted, only appended  -->
+    <!-- ============================================== -->
 
-    <div class="prose">
-      <h3>The Self-Building Platform</h3>
-      <p>Grotap runs a fleet of 10 Hetzner agent servers (agent-01 through agent-10) executing software engineering tasks autonomously. A continuous dispatch loop assigns tasks from a queue to available servers, each running Claude Code in isolated git worktrees. The apps below give the team visibility into this machine, the ability to intervene when agents get stuck, and the tools to manage the AI workforce itself.</p>
-    </div>
+    <!-- March 2026 -->
+    <div class="month-divider">March 2026</div>
 
-    <table class="app-table">
-      <thead>
-        <tr>
-          <th>App</th>
-          <th>Slug</th>
-          <th>Category</th>
-          <th>Status</th>
-          <th>Brand</th>
-          <th>Internal</th>
-          <th>Admin</th>
-          <th>Mobile</th>
-          <th>Free</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#129302;</span> AI Agents</span></td>
-          <td><code>ai-agents</code></td>
-          <td>Operations</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag agents">grotap-agents</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Run AI-powered tasks, view agent execution logs and outputs</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#9889;</span> Agent Pipeline</span></td>
-          <td><code>agent-pipeline</code></td>
-          <td>Operations</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag agents">grotap-agents</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Submit bugs, features, and tasks into the AI dispatch pipeline</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#127806;</span> Farm Dashboard</span></td>
-          <td><code>farm-dashboard</code></td>
-          <td>Infrastructure</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag agents">grotap-agents</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Monitor agent farm health, uptime, and resource utilization</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128421;</span> Servers</span></td>
-          <td><code>servers</code></td>
-          <td>Infrastructure</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag agents">grotap-agents</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Manage agent farm infrastructure &mdash; provision, SSH, and monitor servers</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128680;</span> Human Intervention</span></td>
-          <td><code>human-intervention</code></td>
-          <td>Infrastructure</td>
-          <td><span class="badge badge-beta">Beta</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td><span class="badge badge-internal">Internal</span></td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Track agent-blocked tasks needing human action. Push notifications via Expo.</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#9989;</span> Approvals</span></td>
-          <td><code>approvals</code></td>
-          <td>Operations</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Review human-in-the-loop requests from agent workflows</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="prose">
-      <h3>How These Apps Work Together</h3>
-      <p>The operational flow starts with <strong>Agent Pipeline</strong> where tasks are submitted. The dispatch system routes them to available servers visible in <strong>Servers</strong> and <strong>Farm Dashboard</strong>. <strong>AI Agents</strong> shows real-time execution. When an agent gets stuck, <strong>Human Intervention</strong> fires a push notification and creates a hold record. <strong>Approvals</strong> handles any human-in-the-loop decisions agents request during execution.</p>
-    </div>
-
-    <div class="relationship-box">
-      <h4>Operational Flow</h4>
-      <div class="rel-flow">
-        <span class="rel-node">Agent Pipeline</span>
-        <span class="rel-arrow">&rarr;</span>
-        <span class="rel-node">Dispatch System</span>
-        <span class="rel-arrow">&rarr;</span>
-        <span class="rel-node">Servers / Farm Dashboard</span>
-        <span class="rel-arrow">&rarr;</span>
-        <span class="rel-node">AI Agents</span>
-        <span class="rel-arrow">&rarr;</span>
-        <span class="rel-node">Human Intervention / Approvals</span>
+    <a href="app-report.html" class="report-entry latest-entry">
+      <div class="entry-top">
+        <span class="entry-date">March 10, 2026</span>
+        <span class="entry-badge new">Latest</span>
       </div>
-    </div>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- SECTION 2: PLATFORM CORE -->
-  <!-- ============================================================ -->
-  <div class="section">
-    <div class="section-header">
-      <span class="section-icon">&#128736;</span>
-      <h2>Platform Core &amp; Tenant Management</h2>
-    </div>
-    <div class="section-desc">
-      Foundation apps that every tenant gets. These handle identity, configuration, billing, compliance, and the app marketplace itself.
-    </div>
-
-    <table class="app-table">
-      <thead>
-        <tr>
-          <th>App</th>
-          <th>Slug</th>
-          <th>Category</th>
-          <th>Status</th>
-          <th>Brand</th>
-          <th>Internal</th>
-          <th>Admin</th>
-          <th>Mobile</th>
-          <th>Free</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128202;</span> Dashboard</span></td>
-          <td><code>dashboard</code></td>
-          <td>Platform</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Main tenant dashboard &mdash; KPIs, activity feed, quick actions</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128179;</span> Billing</span></td>
-          <td><code>billing</code></td>
-          <td>Platform</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Manage subscription, usage metering, invoices</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128200;</span> Analytics</span></td>
-          <td><code>analytics</code></td>
-          <td>Platform</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Data analytics dashboards and visualizations</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128203;</span> Audit Log</span></td>
-          <td><code>audit-log</code></td>
-          <td>Platform</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Full audit trail of all organizational actions</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128209;</span> Reports</span></td>
-          <td><code>reports</code></td>
-          <td>Platform</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Generate and export business reports</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#9881;</span> Settings</span></td>
-          <td><code>settings</code></td>
-          <td>Platform</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Tenant configuration, security, API keys</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128276;</span> Notifications</span></td>
-          <td><code>notifications</code></td>
-          <td>Platform</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Notification center and push notification management</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128161;</span> App Ideas</span></td>
-          <td><code>app-ideas</code></td>
-          <td>Platform</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Community app suggestions &mdash; submit, vote, and track ideas</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="relationship-box">
-      <h4>Platform Core Dependencies</h4>
-      <div class="rel-flow">
-        <span class="rel-node">Dashboard</span>
-        <span class="rel-arrow">&larr;</span>
-        <span class="rel-node">Analytics + Reports</span>
+      <div class="entry-title">Grotap Platform — App Report</div>
+      <div class="entry-summary">
+        Comprehensive platform analysis covering all registered apps, their deployment status, technology stacks, revenue tiers, and operational readiness. Includes per-app breakdowns of database connections, agent configurations, background job health, and billing integration across the Grotap multi-tenant ecosystem.
       </div>
-      <div class="rel-flow" style="margin-top: 0.5rem;">
-        <span class="rel-node">Settings</span>
-        <span class="rel-arrow">&rarr;</span>
-        <span class="rel-node">Billing</span>
-        <span class="rel-arrow">&rarr;</span>
-        <span class="rel-node">Audit Log</span>
+      <div class="entry-footer">
+        <div class="entry-tags">
+          <span class="tag">Platform</span>
+          <span class="tag">Apps</span>
+          <span class="tag">Infrastructure</span>
+        </div>
+        <span class="view-link">View full report <span class="arrow">&rarr;</span></span>
       </div>
-      <div class="rel-flow" style="margin-top: 0.5rem;">
-        <span class="rel-node">Notifications</span>
-        <span class="rel-arrow">&larr;</span>
-        <span class="rel-node">All Apps (event source)</span>
-      </div>
-    </div>
-  </div>
+    </a>
 
-  <!-- ============================================================ -->
-  <!-- SECTION 3: KNOWLEDGE & DOCUMENT SYSTEM -->
-  <!-- ============================================================ -->
-  <div class="section">
-    <div class="section-header">
-      <span class="section-icon">&#128218;</span>
-      <h2>Knowledge &amp; Document System</h2>
-    </div>
-    <div class="section-desc">
-      Document ingestion, knowledge management, and the AI reasoning layer that powers contextual understanding across the platform.
-    </div>
+    <!-- END REPORT ENTRIES — New reports go ABOVE this line -->
 
-    <table class="app-table">
-      <thead>
-        <tr>
-          <th>App</th>
-          <th>Slug</th>
-          <th>Category</th>
-          <th>Status</th>
-          <th>Brand</th>
-          <th>Internal</th>
-          <th>Admin</th>
-          <th>Mobile</th>
-          <th>Free</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128228;</span> Document Upload</span></td>
-          <td><code>document-upload</code></td>
-          <td>Platform</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Upload documents to the tenant knowledge base for AI reasoning</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128218;</span> Knowledge Manager</span></td>
-          <td><code>knowledge-manager</code></td>
-          <td>Operations</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag agents">grotap-agents</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Manage knowledge indexes, PageIndex reasoning, and document context</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="relationship-box">
-      <h4>Knowledge Pipeline</h4>
-      <div class="rel-flow">
-        <span class="rel-node">Document Upload</span>
-        <span class="rel-arrow">&rarr;</span>
-        <span class="rel-node">Ingestion Worker</span>
-        <span class="rel-arrow">&rarr;</span>
-        <span class="rel-node">Knowledge Manager</span>
-        <span class="rel-arrow">&rarr;</span>
-        <span class="rel-node">AI Agents (reasoning)</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- SECTION 4: SUPPORT & COBROWSE -->
-  <!-- ============================================================ -->
-  <div class="section">
-    <div class="section-header">
-      <span class="section-icon">&#127911;</span>
-      <h2>Support &amp; Remote Assistance</h2>
-    </div>
-    <div class="section-desc">
-      Live support tools including screen recording, co-browsing, and the internal support portal.
-    </div>
-
-    <table class="app-table">
-      <thead>
-        <tr>
-          <th>App</th>
-          <th>Slug</th>
-          <th>Category</th>
-          <th>Status</th>
-          <th>Brand</th>
-          <th>Internal</th>
-          <th>Admin</th>
-          <th>Mobile</th>
-          <th>Free</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#127909;</span> Cobrowse Console</span></td>
-          <td><code>cobrowse-console</code></td>
-          <td>Platform</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Screen recording, session replay, and remote co-browsing</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#127911;</span> Support Portal</span></td>
-          <td><code>support-portal</code></td>
-          <td>Internal</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td><span class="badge badge-internal">Internal</span></td>
-          <td><span class="badge badge-admin">Admin</span></td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Internal support system for Grotap team &mdash; tickets, FAQs, live chat</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="relationship-box">
-      <h4>Support Flow</h4>
-      <div class="rel-flow">
-        <span class="rel-node">User reports issue</span>
-        <span class="rel-arrow">&rarr;</span>
-        <span class="rel-node">Support Portal (ticket)</span>
-        <span class="rel-arrow">&rarr;</span>
-        <span class="rel-node">Cobrowse Console (diagnose)</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- SECTION 5: OPERATIONS & IOT -->
-  <!-- ============================================================ -->
-  <div class="section">
-    <div class="section-header">
-      <span class="section-icon">&#128225;</span>
-      <h2>Operations &amp; IoT</h2>
-    </div>
-    <div class="section-desc">
-      Operational tools for physical-world integration &mdash; RFID scanning, demand forecasting, and field data collection.
-    </div>
-
-    <table class="app-table">
-      <thead>
-        <tr>
-          <th>App</th>
-          <th>Slug</th>
-          <th>Category</th>
-          <th>Status</th>
-          <th>Brand</th>
-          <th>Internal</th>
-          <th>Admin</th>
-          <th>Mobile</th>
-          <th>Free</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128225;</span> RFID Pipe</span></td>
-          <td><code>rfid-pipe</code></td>
-          <td>Operations</td>
-          <td><span class="badge badge-beta">Beta</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td><span class="check">&#10003;</span></td>
-          <td>RFID tag scanning, batch sync, scan templates &mdash; mobile-first</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128201;</span> Forecast Tool</span></td>
-          <td><code>forecast-tool</code></td>
-          <td>Operations</td>
-          <td><span class="badge badge-beta">Beta</span> <span class="badge badge-blocked">Deploy Blocked</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="badge badge-paid">Paid</span></td>
-          <td>SKU/sub-SKU demand forecasting &mdash; weekly, monthly, annual granularity. 10 API endpoints.</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="prose">
-      <h3>Forecast Tool &mdash; Deploy Blocker</h3>
-      <p>Code is committed to master (backend router + DB migration applied), but Railway deployment is blocked due to an invalid <code>RAILWAY_TOKEN</code> in Doppler. A new token must be generated at railway.com and updated in Doppler <code>prd</code> config.</p>
-    </div>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- SECTION 6: ADMIN & BRAND MANAGEMENT -->
-  <!-- ============================================================ -->
-  <div class="section">
-    <div class="section-header">
-      <span class="section-icon">&#128737;</span>
-      <h2>Administration &amp; Brand Management</h2>
-    </div>
-    <div class="section-desc">
-      Platform-level administration, brand management, and app lifecycle tools. These are internal-only, admin-gated apps.
-    </div>
-
-    <table class="app-table">
-      <thead>
-        <tr>
-          <th>App</th>
-          <th>Slug</th>
-          <th>Category</th>
-          <th>Status</th>
-          <th>Brand</th>
-          <th>Internal</th>
-          <th>Admin</th>
-          <th>Mobile</th>
-          <th>Free</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128737;</span> Admin</span></td>
-          <td><code>admin</code></td>
-          <td>Internal</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td><span class="brand-tag">grotap-apps</span></td>
-          <td><span class="badge badge-internal">Internal</span></td>
-          <td><span class="badge badge-admin">Admin</span></td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Platform admin panel &mdash; tenant management, system health</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#127991;</span> Brand Management</span></td>
-          <td><code>brand-management</code></td>
-          <td>Platform</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td>
-            <span class="brand-tag">grotap-apps</span>
-            <span class="brand-tag agents">grotap-agents</span>
-          </td>
-          <td><span class="badge badge-internal">Internal</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Create and manage brand platforms, view brand users and roles</td>
-        </tr>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#128450;</span> App Manager</span></td>
-          <td><code>app-manager</code></td>
-          <td>Platform</td>
-          <td><span class="badge badge-active">Active</span></td>
-          <td>
-            <span class="brand-tag">grotap-apps</span>
-            <span class="brand-tag agents">grotap-agents</span>
-          </td>
-          <td><span class="badge badge-internal">Internal</span></td>
-          <td class="cross">&#10005;</td>
-          <td class="cross">&#10005;</td>
-          <td><span class="check">&#10003;</span></td>
-          <td>Manage app lifecycle, status transitions, and brand assignments</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="relationship-box">
-      <h4>Admin Hierarchy</h4>
-      <div class="rel-flow">
-        <span class="rel-node">Admin Panel</span>
-        <span class="rel-arrow">&rarr;</span>
-        <span class="rel-node">Brand Management (create brands)</span>
-        <span class="rel-arrow">&rarr;</span>
-        <span class="rel-node">App Manager (assign apps to brands)</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- SECTION 7: IN-DEVELOPMENT (FEATURE BRANCHES) -->
-  <!-- ============================================================ -->
-  <div class="section">
-    <div class="section-header">
-      <span class="section-icon">&#128679;</span>
-      <h2>In Development (Feature Branches)</h2>
-    </div>
-    <div class="section-desc">
-      Apps that exist in feature branches but have not yet been merged to master.
-    </div>
-
-    <table class="app-table">
-      <thead>
-        <tr>
-          <th>App</th>
-          <th>Slug</th>
-          <th>Category</th>
-          <th>Status</th>
-          <th>Branches</th>
-          <th>Tasks</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="app-name"><span class="app-icon">&#127752;</span> Rainbow Weather</span></td>
-          <td><code>rainbow-weather</code></td>
-          <td>Operations</td>
-          <td><span class="badge badge-branch">In Branches</span></td>
-          <td><code>task-task-950</code>, <code>task-task-952</code>, <code>task-task-954</code></td>
-          <td>948&ndash;954 (7 tasks)</td>
-          <td>14 API endpoints, full frontend, weather harvester, rules engine. Tasks 953&ndash;954 still incomplete. Needs review &amp; merge.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- SECTION 8: PLATFORM FRAMEWORK -->
-  <!-- ============================================================ -->
-  <div class="section">
-    <div class="section-header">
-      <span class="section-icon">&#127959;</span>
-      <h2>Platform Framework &amp; Architecture</h2>
-    </div>
-
-    <div class="prose">
-      <h3>Technology Stack</h3>
-      <ul>
-        <li><strong>Frontend:</strong> React + Vite + TypeScript, deployed on Vercel (apps.grotap.com, agents.grotap.ai)</li>
-        <li><strong>Backend:</strong> FastAPI (Python), deployed on Railway (api.grotap.com), 39+ routers</li>
-        <li><strong>Agent Worker:</strong> TypeScript + LangGraph, deployed on Railway</li>
-        <li><strong>Ingestion Worker:</strong> TypeScript + INNGEST, deployed on Railway</li>
-        <li><strong>Mobile:</strong> Expo React Native (7 apps have mobile support)</li>
-        <li><strong>Database:</strong> Neon Serverless Postgres &mdash; database-per-tenant isolation</li>
-        <li><strong>Auth:</strong> WorkOS AuthKit (currently on staging &mdash; production migration pending)</li>
-        <li><strong>Secrets:</strong> Doppler (single source of truth, never GitHub secrets)</li>
-        <li><strong>Infrastructure:</strong> 10 Hetzner agent servers, Terraform-managed</li>
-      </ul>
-    </div>
-
-    <div class="prose">
-      <h3>Database-Per-Tenant Architecture</h3>
-      <p>Every tenant gets its own Neon Postgres project, fully isolated. The <strong>control plane</strong> database (<code>green-rice-76766370</code>) stores the app catalog, brands, tenant registry, and cross-tenant metadata. Tenant-specific data (documents, RFID scans, forecasts, etc.) lives exclusively in the tenant's own database, provisioned dynamically by <code>NeonProvider</code>.</p>
-    </div>
-
-    <div class="prose">
-      <h3>App Registry &amp; Marketplace</h3>
-      <p>Apps follow a lifecycle: <strong>review &rarr; approved &rarr; development &rarr; beta_testing &rarr; production_live</strong>. The <code>/app-registry</code> router exposes the full catalog with subscription status. Tenants can subscribe to apps, which grants features via WorkOS. The App Library page also includes a hardcoded quick-access module grid.</p>
-      <p>App categories: <strong>Finance, Legal, HR, Operations, Platform, Infrastructure, Internal</strong>.</p>
-    </div>
-
-    <div class="prose">
-      <h3>Key Architectural Rules</h3>
-      <ul>
-        <li>Agents = TypeScript/JS only. Python = FastAPI backend only.</li>
-        <li>All 3rd-party calls go through vendor wrapper classes (<code>providers/</code>).</li>
-        <li>No vector embeddings &mdash; PageIndex reasoning-based retrieval only.</li>
-        <li>All secrets in Doppler. The only GitHub secret is <code>DOPPLER_SERVICE_TOKEN</code>.</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- SECTION 9: MULTI-BRAND STRATEGY -->
-  <!-- ============================================================ -->
-  <div class="section">
-    <div class="section-header">
-      <span class="section-icon">&#127991;</span>
-      <h2>Multi-Brand Strategy</h2>
-    </div>
-
-    <div class="prose">
-      <h3>Two Brands, One Platform</h3>
-      <p>The platform runs two distinct brand experiences from the same codebase and infrastructure:</p>
-    </div>
-
-    <div class="relationship-box">
-      <h4 style="font-size: 1.1rem;">&#127760; grotap-apps &mdash; apps.grotap.com</h4>
-      <div style="color: var(--muted); font-size: 0.9rem; margin-top: 0.5rem;">
-        <p>The <strong>primary tenant-facing brand</strong>. Hosts all platform core apps (Dashboard, Billing, Analytics, Settings, etc.), operational tools (RFID Pipe, Forecast Tool), support tools, and the admin panel. This is what customers see and use.</p>
-        <p style="margin-top: 0.5rem;"><strong>18 apps assigned</strong> &mdash; everything except the agent-specific tools.</p>
-      </div>
-    </div>
-
-    <div class="relationship-box">
-      <h4 style="font-size: 1.1rem;">&#129302; grotap-agents &mdash; agents.grotap.ai</h4>
-      <div style="color: var(--muted); font-size: 0.9rem; margin-top: 0.5rem;">
-        <p>The <strong>AI operations brand</strong>. Purpose-built for managing the agent fleet. Hosts Agent Pipeline, AI Agents, Farm Dashboard, Servers, plus Brand Management and App Manager for cross-brand administration.</p>
-        <p style="margin-top: 0.5rem;"><strong>6 apps assigned</strong> &mdash; focused exclusively on the AI agent infrastructure.</p>
-      </div>
-    </div>
-
-    <div class="prose">
-      <h3>Brand Architecture</h3>
-      <p>Brands are stored in the <code>brands</code> table (control plane). Each brand has a slug, display name, domain, and logo. The <code>brand_app_assignments</code> junction table maps which apps appear on which brand. The <code>brand_users</code> table assigns per-brand roles (admin, member, viewer) &mdash; replacing the old <code>@grotap.com</code> email check for admin access.</p>
-      <p>Brand Management and App Manager are assigned to <strong>both brands</strong>, allowing platform admins to manage the multi-brand ecosystem from either interface. App Manager is gated to <code>grotap-agents</code> brand admins only for write operations.</p>
-    </div>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- SECTION 10: FULL MASTER TABLE -->
-  <!-- ============================================================ -->
-  <div class="section">
-    <div class="section-header">
-      <span class="section-icon">&#128203;</span>
-      <h2>Complete App Catalog &mdash; All 22 Apps</h2>
-    </div>
-
-    <table class="app-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>App</th>
-          <th>Slug</th>
-          <th>Category</th>
-          <th>Status</th>
-          <th>Brand(s)</th>
-          <th>Internal</th>
-          <th>Admin</th>
-          <th>Mobile</th>
-          <th>Pricing</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>1</td><td><span class="app-name"><span class="app-icon">&#128202;</span> Dashboard</span></td><td><code>dashboard</code></td><td>Platform</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag">grotap-apps</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="check">&#10003;</span></td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>2</td><td><span class="app-name"><span class="app-icon">&#128228;</span> Document Upload</span></td><td><code>document-upload</code></td><td>Platform</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag">grotap-apps</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>3</td><td><span class="app-name"><span class="app-icon">&#9889;</span> Agent Pipeline</span></td><td><code>agent-pipeline</code></td><td>Operations</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag agents">grotap-agents</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="check">&#10003;</span></td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>4</td><td><span class="app-name"><span class="app-icon">&#129302;</span> AI Agents</span></td><td><code>ai-agents</code></td><td>Operations</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag agents">grotap-agents</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>5</td><td><span class="app-name"><span class="app-icon">&#128421;</span> Servers</span></td><td><code>servers</code></td><td>Infrastructure</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag agents">grotap-agents</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>6</td><td><span class="app-name"><span class="app-icon">&#127806;</span> Farm Dashboard</span></td><td><code>farm-dashboard</code></td><td>Infrastructure</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag agents">grotap-agents</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>7</td><td><span class="app-name"><span class="app-icon">&#9989;</span> Approvals</span></td><td><code>approvals</code></td><td>Operations</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag">grotap-apps</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="check">&#10003;</span></td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>8</td><td><span class="app-name"><span class="app-icon">&#127909;</span> Cobrowse Console</span></td><td><code>cobrowse-console</code></td><td>Platform</td><td><span class="brand-tag">grotap-apps</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td><td><span class="badge badge-active">Active</span></td></tr>
-        <tr><td>9</td><td><span class="app-name"><span class="app-icon">&#128179;</span> Billing</span></td><td><code>billing</code></td><td>Platform</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag">grotap-apps</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>10</td><td><span class="app-name"><span class="app-icon">&#128200;</span> Analytics</span></td><td><code>analytics</code></td><td>Platform</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag">grotap-apps</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>11</td><td><span class="app-name"><span class="app-icon">&#128203;</span> Audit Log</span></td><td><code>audit-log</code></td><td>Platform</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag">grotap-apps</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>12</td><td><span class="app-name"><span class="app-icon">&#128209;</span> Reports</span></td><td><code>reports</code></td><td>Platform</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag">grotap-apps</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>13</td><td><span class="app-name"><span class="app-icon">&#9881;</span> Settings</span></td><td><code>settings</code></td><td>Platform</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag">grotap-apps</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>14</td><td><span class="app-name"><span class="app-icon">&#128276;</span> Notifications</span></td><td><code>notifications</code></td><td>Platform</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag">grotap-apps</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="check">&#10003;</span></td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>15</td><td><span class="app-name"><span class="app-icon">&#128161;</span> App Ideas</span></td><td><code>app-ideas</code></td><td>Platform</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag">grotap-apps</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>16</td><td><span class="app-name"><span class="app-icon">&#127911;</span> Support Portal</span></td><td><code>support-portal</code></td><td>Internal</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag">grotap-apps</span></td><td><span class="badge badge-internal">Internal</span></td><td><span class="badge badge-admin">Admin</span></td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>17</td><td><span class="app-name"><span class="app-icon">&#128737;</span> Admin</span></td><td><code>admin</code></td><td>Internal</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag">grotap-apps</span></td><td><span class="badge badge-internal">Internal</span></td><td><span class="badge badge-admin">Admin</span></td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>18</td><td><span class="app-name"><span class="app-icon">&#128225;</span> RFID Pipe</span></td><td><code>rfid-pipe</code></td><td>Operations</td><td><span class="badge badge-beta">Beta</span></td><td><span class="brand-tag">grotap-apps</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="check">&#10003;</span></td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>19</td><td><span class="app-name"><span class="app-icon">&#128680;</span> Human Intervention</span></td><td><code>human-intervention</code></td><td>Infrastructure</td><td><span class="badge badge-beta">Beta</span></td><td><span class="brand-tag">grotap-apps</span></td><td><span class="badge badge-internal">Internal</span></td><td class="cross">&#10005;</td><td><span class="check">&#10003;</span></td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>20</td><td><span class="app-name"><span class="app-icon">&#127991;</span> Brand Management</span></td><td><code>brand-management</code></td><td>Platform</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag">grotap-apps</span> <span class="brand-tag agents">grotap-agents</span></td><td><span class="badge badge-internal">Internal</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>21</td><td><span class="app-name"><span class="app-icon">&#128450;</span> App Manager</span></td><td><code>app-manager</code></td><td>Platform</td><td><span class="badge badge-active">Active</span></td><td><span class="brand-tag">grotap-apps</span> <span class="brand-tag agents">grotap-agents</span></td><td><span class="badge badge-internal">Internal</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="badge badge-free">Free</span></td></tr>
-        <tr><td>22</td><td><span class="app-name"><span class="app-icon">&#128201;</span> Forecast Tool</span></td><td><code>forecast-tool</code></td><td>Operations</td><td><span class="badge badge-beta">Beta</span> <span class="badge badge-blocked">Blocked</span></td><td><span class="brand-tag">grotap-apps</span></td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td class="cross">&#10005;</td><td><span class="badge badge-paid">Paid</span></td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Footer -->
-  <div style="text-align: center; padding: 2rem 0; border-top: 1px solid var(--border); color: var(--dim); font-size: 0.8rem;">
-    Grotap Platform App Report &bull; Generated 2026-03-11 &bull; 22 Apps &bull; 2 Brands &bull; 39+ Routers &bull; 56+ Pages
   </div>
 
 </div>
+
+<footer class="page-footer">
+  Grotap Team Communication &middot; Reports are published automatically and never removed.
+</footer>
+
 </body>
 </html>
-

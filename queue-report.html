@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="refresh" content="120">
+<title>grotap — Agent Task Queue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --card: #1a1d27;
+  --card-hover: #22253a;
+  --border: #2a2d3a;
+  --accent: #6366f1;
+  --accent2: #818cf8;
+  --green: #22c55e;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --orange: #f97316;
+  --cyan: #06b6d4;
+  --pink: #ec4899;
+  --purple: #a78bfa;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --dim: #64748b;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* Header */
+.page-header { text-align: center; padding: 2.5rem 2rem 2rem; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, #141620 0%, var(--bg) 100%); }
+.page-header .logo { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; color: var(--accent2); margin-bottom: 0.6rem; }
+.page-header h1 { font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.4rem; }
+.page-header .subtitle { color: var(--muted); font-size: 1rem; }
+.page-header .meta { display: inline-flex; align-items: center; gap: 16px; margin-top: 1rem; padding: 0.4rem 1.2rem; background: var(--card); border: 1px solid var(--border); border-radius: 20px; font-size: 0.78rem; color: var(--dim); }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* Stats */
+.stats { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; padding: 1.5rem 2rem; background: var(--bg); border-bottom: 1px solid var(--border); }
+.stat { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1.5rem; text-align: center; min-width: 90px; }
+.stat-num { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+.stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--dim); margin-top: 4px; }
+.stat.s-critical { border-color: rgba(239,68,68,0.3); } .stat.s-critical .stat-num { color: var(--red); }
+.stat.s-active   { border-color: rgba(99,102,241,0.3); } .stat.s-active .stat-num   { color: var(--accent2); }
+.stat.s-pending  { border-color: rgba(234,179,8,0.3);  } .stat.s-pending .stat-num  { color: var(--yellow); }
+.stat.s-hold     { border-color: rgba(251,146,60,0.3); } .stat.s-hold .stat-num     { color: var(--orange); }
+.stat.s-done     { border-color: rgba(34,197,94,0.3);  } .stat.s-done .stat-num     { color: var(--green); }
+
+/* Container */
+.container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* Section */
+.section { margin-bottom: 2rem; }
+.section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+.section-title { font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
+.section-count { font-size: 0.75rem; background: rgba(255,255,255,0.07); border-radius: 999px; padding: 2px 9px; color: var(--muted); }
+.s-head-critical .section-title { color: var(--red); }
+.s-head-active   .section-title { color: var(--accent2); }
+.s-head-pending  .section-title { color: var(--yellow); }
+.s-head-hold     .section-title { color: var(--orange); }
+
+/* Task cards */
+.task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+.task-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 13px 15px; transition: all 0.15s; }
+.task-card:hover { background: var(--card-hover); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+.task-card.p-critical { border-left: 3px solid var(--red); }
+.task-card.p-high     { border-left: 3px solid var(--orange); }
+.task-card.p-normal   { border-left: 3px solid var(--border); }
+.task-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.task-id { font-size: 0.72rem; font-family: monospace; color: var(--dim); white-space: nowrap; margin-top: 1px; }
+.task-badges { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.task-title { font-size: 0.84rem; color: var(--text); line-height: 1.45; }
+
+/* Badges */
+.badge { font-size: 0.65rem; border-radius: 4px; padding: 2px 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap; }
+.badge-critical { background: rgba(239,68,68,0.15);  color: var(--red);     border: 1px solid rgba(239,68,68,0.3); }
+.badge-high     { background: rgba(249,115,22,0.15); color: var(--orange);  border: 1px solid rgba(249,115,22,0.3); }
+.badge-normal   { background: rgba(100,116,139,0.15);color: var(--muted);   border: 1px solid rgba(100,116,139,0.25); }
+.badge-low      { background: rgba(100,116,139,0.1); color: var(--dim);     border: 1px solid rgba(100,116,139,0.2); }
+.badge-simple   { background: rgba(34,197,94,0.08);  color: #6ee7b7;       border: 1px solid rgba(34,197,94,0.2); }
+.badge-medium   { background: rgba(99,102,241,0.08); color: #a5b4fc;       border: 1px solid rgba(99,102,241,0.2); }
+.badge-complex  { background: rgba(167,139,250,0.1); color: var(--purple);  border: 1px solid rgba(167,139,250,0.25); }
+.badge-app      { background: rgba(236,72,153,0.08); color: #f9a8d4;       border: 1px solid rgba(236,72,153,0.2); }
+.badge-hold     { background: rgba(234,179,8,0.12);  color: var(--yellow);  border: 1px solid rgba(234,179,8,0.3); }
+
+/* Hold note */
+.hold-note { font-size: 0.75rem; color: var(--yellow); margin-top: 6px; padding: 5px 8px; background: rgba(234,179,8,0.06); border-radius: 5px; border: 1px solid rgba(234,179,8,0.15); }
+
+/* Done list */
+.done-list { display: flex; flex-direction: column; gap: 5px; }
+.done-item { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 7px 12px; }
+.done-item .task-id { min-width: 36px; }
+.done-item .done-title { font-size: 0.8rem; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.done-check { color: var(--green); font-size: 0.9rem; flex-shrink: 0; }
+.done-toggle { background: none; border: 1px solid var(--border); color: var(--accent2); border-radius: 6px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer; margin-bottom: 10px; }
+.done-toggle:hover { border-color: var(--accent2); background: rgba(99,102,241,0.08); }
+
+/* Empty */
+.empty { color: var(--dim); font-size: 0.85rem; padding: 20px; text-align: center; background: var(--card); border: 1px dashed var(--border); border-radius: 8px; }
+
+/* Footer */
+footer { text-align: center; padding: 2rem; color: var(--dim); font-size: 0.78rem; border-top: 1px solid var(--border); }
+footer a { color: var(--accent2); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+@media (max-width: 640px) { .page-header h1 { font-size: 1.6rem; } .task-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="logo">grotap</div>
+  <h1>Agent Task Queue</h1>
+  <p class="subtitle">Live view of what agents are working on, waiting for, and what's next.</p>
+  <div class="meta">
+    <span class="live-dot"></span>
+    <span>Auto-refreshes every 2 min</span>
+    <span>·</span>
+    <span>Generated: 2026-03-13 01:31 UTC</span>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stat s-critical"><div class="stat-num">4</div><div class="stat-label">Critical</div></div>
+  <div class="stat s-active"><div class="stat-num">11</div><div class="stat-label">Active</div></div>
+  <div class="stat s-pending"><div class="stat-num">0</div><div class="stat-label">Pending</div></div>
+  <div class="stat s-hold"><div class="stat-num">2</div><div class="stat-label">On Hold</div></div>
+  <div class="stat s-done"><div class="stat-num">1038+</div><div class="stat-label">Done</div></div>
+</div>
+
+<div class="container">
+  <!-- ACTIVE -->
+  <div class="section">
+    <div class="section-header s-head-active">
+      <span class="section-title">Active</span>
+      <span class="section-count">11 tasks running</span>
+    </div>
+    <div class="task-grid">
+          <div class="task-card p-critical">
+            <div class="task-header">
+              <span class="task-id">#968</span>
+              <div class="task-badges">
+                <span class="badge badge-critical">Critical</span>
+                <span class="badge badge-simple">Simple</span>
+                <span class="badge badge-app">Human Intervention</span>
+              </div>
+            </div>
+            <div class="task-title">Human Intervention App — DB migration, seed app, assign to Grotap brand</div>
+          </div>
+          <div class="task-card p-critical">
+            <div class="task-header">
+              <span class="task-id">#969</span>
+              <div class="task-badges">
+                <span class="badge badge-critical">Critical</span>
+                <span class="badge badge-medium">Medium</span>
+                <span class="badge badge-app">Human Intervention</span>
+              </div>
+            </div>
+            <div class="task-title">Human Intervention App — backend router + push notification service</div>
+          </div>
+          <div class="task-card p-critical">
+            <div class="task-header">
+              <span class="task-id">#970</span>
+              <div class="task-badges">
+                <span class="badge badge-critical">Critical</span>
+                <span class="badge badge-medium">Medium</span>
+                <span class="badge badge-app">Human Intervention</span>
+              </div>
+            </div>
+            <div class="task-title">Human Intervention App — frontend page + route wiring</div>
+          </div>
+          <div class="task-card p-high">
+            <div class="task-header">
+              <span class="task-id">#956</span>
+              <div class="task-badges">
+                <span class="badge badge-high">High</span>
+                <span class="badge badge-medium">Medium</span>
+                <span class="badge badge-app">Brand Admin</span>
+              </div>
+            </div>
+            <div class="task-title">Add role column to brand_users table + brand-level admin system</div>
+          </div>
+          <div class="task-card p-high">
+            <div class="task-header">
+              <span class="task-id">#957</span>
+              <div class="task-badges">
+                <span class="badge badge-high">High</span>
+                <span class="badge badge-medium">Medium</span>
+                <span class="badge badge-app">Brand Admin</span>
+              </div>
+            </div>
+            <div class="task-title">Gate App Manager + Agent Teams pages to Grotap AI Agents brand admins only</div>
+          </div>
+          <div class="task-card p-high">
+            <div class="task-header">
+              <span class="task-id">#958</span>
+              <div class="task-badges">
+                <span class="badge badge-high">High</span>
+                <span class="badge badge-medium">Medium</span>
+                
+              </div>
+            </div>
+            <div class="task-title">Setup Users page — invite members with brand-level role assignment</div>
+          </div>
+          <div class="task-card p-high">
+            <div class="task-header">
+              <span class="task-id">#961</span>
+              <div class="task-badges">
+                <span class="badge badge-high">High</span>
+                <span class="badge badge-medium">Medium</span>
+                <span class="badge badge-app">Forecast</span>
+              </div>
+            </div>
+            <div class="task-title">Forecast Tool — frontend smoke test and UX verification</div>
+          </div>
+          <div class="task-card p-high">
+            <div class="task-header">
+              <span class="task-id">#962</span>
+              <div class="task-badges">
+                <span class="badge badge-high">High</span>
+                <span class="badge badge-complex">Complex</span>
+                <span class="badge badge-app">Dashboard</span>
+              </div>
+            </div>
+            <div class="task-title">Server Connections Setup + Dashboard</div>
+          </div>
+          <div class="task-card p-high">
+            <div class="task-header">
+              <span class="task-id">#971</span>
+              <div class="task-badges">
+                <span class="badge badge-high">High</span>
+                <span class="badge badge-simple">Simple</span>
+                <span class="badge badge-app">Human Intervention</span>
+              </div>
+            </div>
+            <div class="task-title">Human Intervention App — dispatch integration, agents auto-create holds</div>
+          </div>
+          <div class="task-card p-normal">
+            <div class="task-header">
+              <span class="task-id">#953</span>
+              <div class="task-badges">
+                <span class="badge badge-normal">Normal</span>
+                <span class="badge badge-medium">Medium</span>
+                <span class="badge badge-app">Rainbow</span>
+              </div>
+            </div>
+            <div class="task-title">Rainbow App — scheduled weather harvester with INNGEST event</div>
+          </div>
+          <div class="task-card p-normal">
+            <div class="task-header">
+              <span class="task-id">#954</span>
+              <div class="task-badges">
+                <span class="badge badge-normal">Normal</span>
+                <span class="badge badge-complex">Complex</span>
+                <span class="badge badge-app">Rainbow</span>
+              </div>
+            </div>
+            <div class="task-title">Rainbow App — agent rules engine for weather-based replenishment triggers</div>
+          </div>
+    </div>
+  </div>
+  <!-- HOLD -->
+  <div class="section">
+    <div class="section-header s-head-hold">
+      <span class="section-title">On Hold — Needs Human</span>
+      <span class="section-count">2 blocked</span>
+    </div>
+    <div class="task-grid">
+      <div class="task-card p-critical">
+        <div class="task-header">
+          <span class="task-id">#955</span>
+          <div class="task-badges">
+            <span class="badge badge-critical">Critical</span>
+            <span class="badge badge-medium">Medium</span>
+            <span class="badge badge-app">Auth</span>
+            <span class="badge badge-hold">Hold</span>
+          </div>
+        </div>
+        <div class="task-title">Switch WorkOS from staging to production + custom AuthKit domain</div>
+        <div class="hold-note">⚠ Blocked — human action required</div>
+      </div>
+      <div class="task-card p-high">
+        <div class="task-header">
+          <span class="task-id">#960</span>
+          <div class="task-badges">
+            <span class="badge badge-high">High</span>
+            <span class="badge badge-medium">Medium</span>
+            <span class="badge badge-app">Forecast</span>
+            <span class="badge badge-hold">Hold</span>
+          </div>
+        </div>
+        <div class="task-title">Forecast Tool — test all backend API endpoints</div>
+        <div class="hold-note">⚠ Blocked — human action required</div>
+      </div>
+    </div>
+  </div>
+  <!-- PENDING -->
+  <div class="section">
+    <div class="section-header s-head-pending">
+      <span class="section-title">Pending Queue</span>
+      <span class="section-count">0 queued</span>
+    </div>
+    <div class="empty">No tasks pending — add tasks to agents/tasks/pending/</div>
+  </div>
+  <!-- DONE -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title" style="color:var(--green)">Recently Completed</span>
+      <span class="section-count">89 this sprint + 949 archived</span>
+    </div>
+    <button class="done-toggle" onclick="toggleDone()" id="done-btn">▶ Show completed tasks</button>
+    <div id="done-list" style="display:none">
+      <div class="done-list">
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#978</span>
+          <span class="done-title">Forecast Tool — frontend template downloads, import overhaul, public forecast page</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#977</span>
+          <span class="done-title">Forecast Tool — frontend hierarchical grid with SKU/variety rows and period columns</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#976</span>
+          <span class="done-title">Forecast Tool — frontend create fix, status display, publish button</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#975</span>
+          <span class="done-title">Forecast Tool — backend public forecast page endpoint</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#974</span>
+          <span class="done-title">Forecast Tool — backend publish workflow + template download endpoints</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#973</span>
+          <span class="done-title">Forecast Tool — schema migration: status, forecast number, SKU master + variety fields</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#972</span>
+          <span class="done-title">Forecast Tool — fix create bug + field mapping in all responses</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#967</span>
+          <span class="done-title">Agents Live — frontend page (convert dashboard.html to React) + wire route</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#966</span>
+          <span class="done-title">Agents Live — register app, seed control plane, assign to Grotap brand</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#965</span>
+          <span class="done-title">Analytics Dashboard — Live Stats, Neon DB Chart, Company Metrics</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#964</span>
+          <span class="done-title">Fix Support App — Appointment screen blacks out</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#963</span>
+          <span class="done-title">Fix app menu/button layout — z-index, overlap, padding</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#959</span>
+          <span class="done-title">Forecast Tool — run DB migration + seed app as beta</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#952</span>
+          <span class="done-title">Rainbow App — full frontend page with locations, weather dashboard, and data views</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#951</span>
+          <span class="done-title">Rainbow App — seed in app catalog and register frontend route</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#950</span>
+          <span class="done-title">Rainbow App — backend router with location CRUD and weather endpoints</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#949</span>
+          <span class="done-title">Rainbow App — OpenWeatherMap vendor wrapper provider</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#948</span>
+          <span class="done-title">Rainbow App — tenant DB schema for weather locations and observations</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#947</span>
+          <span class="done-title">Cobrowse recording → pipeline submission with narration sidebar</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#946</span>
+          <span class="done-title">Fix Cobrowse console session connection — use API instead of client SDK</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#945</span>
+          <span class="done-title">Dynamic app route registry — load APP_ROUTES from backend API</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#944</span>
+          <span class="done-title">Modular app shell — standardize AppShell wrapper for all 28 app pages</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#943</span>
+          <span class="done-title">Fix sidebar+TopNav+TabBar layout across all 28 app pages</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#</span>
+          <span class="done-title">Phase 4 — Platform Rules DB</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#</span>
+          <span class="done-title">Phase 3 — App Knowledge Projects (rfid-pipe)</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#938</span>
+          <span class="done-title">Tabbed multi-app workspace — apps launch and run in tabs</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#937</span>
+          <span class="done-title">Fix avatar dropdown — stop routing to Support Portal</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#936</span>
+          <span class="done-title">Suggest App → create pipeline case on submit</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#935</span>
+          <span class="done-title">Add Apps page — rename from Buy Apps, remove filters</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#934</span>
+          <span class="done-title">Fix no apps showing — create tables, seed data, auto-include free apps</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#932</span>
+          <span class="done-title">Pipeline case satisfaction rating</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#930</span>
+          <span class="done-title">Dashboard tenant stats</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#929</span>
+          <span class="done-title">Reports pipeline completion rate</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#928</span>
+          <span class="done-title">Agents template manager</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#924</span>
+          <span class="done-title">Reports case type breakdown</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#922</span>
+          <span class="done-title">Pipeline case revision history</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#920</span>
+          <span class="done-title">Dashboard recent documents</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#917</span>
+          <span class="done-title">Pipeline case resolution checklist</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#914</span>
+          <span class="done-title">Reports document stale detection</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#913</span>
+          <span class="done-title">Agents run analytics</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#911</span>
+          <span class="done-title">Settings user preferences</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#910</span>
+          <span class="done-title">Dashboard live activity</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#909</span>
+          <span class="done-title">Reports agent interactions per case</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#908</span>
+          <span class="done-title">Pipeline case sub-issues</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#907</span>
+          <span class="done-title">Settings access log</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#906</span>
+          <span class="done-title">Dashboard system metrics</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#905</span>
+          <span class="done-title">Reports document query rate</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#904</span>
+          <span class="done-title">Agents prompt library</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#903</span>
+          <span class="done-title">Pipeline case sprint</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#902</span>
+          <span class="done-title">Settings email notifications</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#901</span>
+          <span class="done-title">Dashboard watchlist</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#900</span>
+          <span class="done-title">Reports case outcome distribution</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#548</span>
+          <span class="done-title">Reports first response time</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#544</span>
+          <span class="done-title">Dashboard failed cases</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#540</span>
+          <span class="done-title">Pipeline case contact history</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#536</span>
+          <span class="done-title">Reports new cases trend</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#532</span>
+          <span class="done-title">Reports cases by assignee</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#528</span>
+          <span class="done-title">Settings team members</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#100</span>
+          <span class="done-title">Pipeline Case Clone</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#099</span>
+          <span class="done-title">API Usage Dashboard in Settings</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#098</span>
+          <span class="done-title">Document Bulk Actions</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#097</span>
+          <span class="done-title">Pipeline Case Advanced Filters</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#096</span>
+          <span class="done-title">Document Tag Filter UI</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#095</span>
+          <span class="done-title">Pipeline Activity Feed</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#094</span>
+          <span class="done-title">Audit Log Retention Settings</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#093</span>
+          <span class="done-title">Pipeline Case Dependencies</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#092</span>
+          <span class="done-title">App Favorites / Pinning</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#091</span>
+          <span class="done-title">Document Share Links</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#090</span>
+          <span class="done-title">Webhook Manual Retry</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#088</span>
+          <span class="done-title">Pipeline Case Templates</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#087</span>
+          <span class="done-title">Dashboard Stats Cards</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#073</span>
+          <span class="done-title">Pipeline case assignments - assign to user</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#069</span>
+          <span class="done-title">Pipeline case timeline - stages with timestamps</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#066</span>
+          <span class="done-title">App library ratings and reviews</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#061</span>
+          <span class="done-title">Pipeline case full-text search API</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#058</span>
+          <span class="done-title">Slack notification when pipeline case needs approval</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#054</span>
+          <span class="done-title">Notification preferences for users</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#053</span>
+          <span class="done-title">Bulk approve/reject for pipeline cases awaiting human review</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#052</span>
+          <span class="done-title">Usage analytics page with tenant metrics</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#051</span>
+          <span class="done-title">Document in-browser preview (PDF and images)</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#049</span>
+          <span class="done-title">Pipeline case comments thread</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#046</span>
+          <span class="done-title">Super-admin tenant list page</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#042</span>
+          <span class="done-title">Tenant onboarding checklist on dashboard</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#041</span>
+          <span class="done-title">Document tags — add, remove, filter by tag</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#038</span>
+          <span class="done-title">App runner — run installed apps with input and show results</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#034</span>
+          <span class="done-title">Audit log CSV export endpoint and frontend download button</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#003</span>
+          <span class="done-title">Frontend audit log page</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#002</span>
+          <span class="done-title">Backend audit log endpoint</span>
+        </div>
+        <div class="done-item">
+          <span class="done-check">✓</span>
+          <span class="task-id">#001</span>
+          <span class="done-title">Expo mobile app scaffold</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<footer>
+  <p>grotap Agent Queue Report &middot; <a href="index.html">← All Reports</a> &middot; Page auto-refreshes every 2 minutes</p>
+</footer>
+
+<script>
+function toggleDone() {
+  const list = document.getElementById('done-list');
+  const btn = document.getElementById('done-btn');
+  const showing = list.style.display !== 'none';
+  list.style.display = showing ? 'none' : 'block';
+  btn.textContent = showing ? '▶ Show completed tasks' : '▼ Hide completed tasks';
+}
+</script>
+</body>
+</html>

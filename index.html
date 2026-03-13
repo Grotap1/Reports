@@ -61,6 +61,39 @@
     max-width: 600px;
     margin: 0 auto;
   }
+  .page-header .quick-links {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+  }
+  .page-header .quick-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.9rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--accent2);
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  .page-header .quick-link:hover {
+    border-color: var(--accent);
+    background: var(--card-hover);
+    color: var(--text);
+  }
+  .page-header .quick-link .ql-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
   .page-header .report-count {
     display: inline-block;
     margin-top: 1rem;
@@ -268,7 +301,10 @@
 <header class="page-header">
   <div class="logo">Grotap</div>
   <h1>Grotap Operational Report</h1>
-  <p class="subtitle">Team communication hub — all published reports in one place, newest first.</p>
+  <nav class="quick-links">
+    <a href="queue-report.html" class="quick-link"><span class="ql-dot"></span>Agent Task Queue — Live</a>
+    <a href="app-report.html" class="quick-link">Grotap Platform App Report</a>
+  </nav>
   <div class="report-count"><span>2</span> reports published</div>
 </header>
 

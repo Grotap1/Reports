@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grotap Agent Cluster Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0d1117;
+    color: #e6edf3;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    padding: 24px 32px;
+    min-height: 100vh;
+  }
+
+  /* Header: title left, summary right */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-left h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #58a6ff, #bc8cff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header-left .subtitle {
+    font-size: 0.95rem;
+    color: #8b949e;
+    margin-top: 2px;
+  }
+
+  .summary-bar {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .summary-item {
+    text-align: center;
+  }
+
+  .summary-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .summary-label {
+    font-size: 0.75rem;
+    color: #8b949e;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  .summary-value.total { color: #58a6ff; }
+  .summary-value.running { color: #3fb950; }
+  .summary-value.pending { color: #d29922; }
+  .summary-value.active { color: #58a6ff; }
+
+  /* Department section headers */
+  .dept-header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+  }
+
+  .dept-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 3px 12px;
+    border-radius: 999px;
+  }
+
+  .dept-label.software {
+    background: rgba(88, 166, 255, 0.1);
+    color: #58a6ff;
+    border: 1px solid rgba(88, 166, 255, 0.2);
+  }
+
+  .dept-label.marketing {
+    background: rgba(63, 185, 80, 0.1);
+    color: #3fb950;
+    border: 1px solid rgba(63, 185, 80, 0.2);
+  }
+
+  .dept-line {
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+  }
+
+  /* Marketing role badge */
+  .role-badge.marketing {
+    background: rgba(63, 185, 80, 0.12);
+    color: #3fb950;
+    border: 1px solid rgba(63, 185, 80, 0.25);
+  }
+
+  /* Server Grid — compact */
+  .server-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 12px;
+    max-width: 1800px;
+  }
+
+  .server-card {
+    background: #161b22;
+    border-radius: 10px;
+    padding: 14px 18px;
+    border-left: 4px solid;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+
+  .server-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .server-card.running { border-left-color: #3fb950; }
+  .server-card.pending { border-left-color: #d29922; }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .server-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+
+  .status-badge.running {
+    background: rgba(63, 185, 80, 0.15);
+    color: #3fb950;
+  }
+
+  .status-badge.pending {
+    background: rgba(210, 153, 34, 0.15);
+    color: #d29922;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .status-dot.running {
+    background: #3fb950;
+    box-shadow: 0 0 6px #3fb950;
+    animation: pulse-green 2s infinite;
+  }
+
+  .status-dot.pending {
+    background: #d29922;
+    box-shadow: 0 0 6px #d29922;
+    animation: pulse-yellow 2s infinite;
+  }
+
+  @keyframes pulse-green {
+    0%, 100% { box-shadow: 0 0 3px #3fb950; }
+    50% { box-shadow: 0 0 12px #3fb950; }
+  }
+
+  @keyframes pulse-yellow {
+    0%, 100% { box-shadow: 0 0 3px #d29922; }
+    50% { box-shadow: 0 0 12px #d29922; }
+  }
+
+  .modules-section {
+    margin-bottom: 4px;
+  }
+
+  .module-group {
+    margin-bottom: 6px;
+  }
+
+  .module-name {
+    font-size: 0.7rem;
+    color: #bc8cff;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 4px;
+  }
+
+  .roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .role-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: rgba(88, 166, 255, 0.12);
+    color: #58a6ff;
+    border: 1px solid rgba(88, 166, 255, 0.25);
+  }
+
+  .role-badge.overflow {
+    background: rgba(210, 153, 34, 0.12);
+    color: #d29922;
+    border-color: rgba(210, 153, 34, 0.25);
+    font-style: italic;
+  }
+
+  /* Task Status — compact */
+  .task-status {
+    margin-top: 8px;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .task-status.idle { border-left: 3px solid #484f58; }
+  .task-status.working { border-left: 3px solid #58a6ff; background: rgba(88, 166, 255, 0.06); }
+  .task-status.stalled { border-left: 3px solid #f85149; background: rgba(248, 81, 73, 0.06); }
+  .task-status.pending-task { border-left: 3px solid #d29922; background: rgba(210, 153, 34, 0.06); }
+
+  .task-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .task-status.idle .task-name { color: #6e7681; }
+  .task-status.working .task-name { color: #58a6ff; }
+  .task-status.stalled .task-name { color: #f85149; }
+  .task-status.pending-task .task-name { color: #d29922; }
+
+  .task-duration {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .task-status.idle .task-duration { background: rgba(139, 148, 158, 0.12); color: #6e7681; }
+  .task-status.working .task-duration { background: rgba(88, 166, 255, 0.15); color: #58a6ff; }
+  .task-status.stalled .task-duration { background: rgba(248, 81, 73, 0.15); color: #f85149; }
+  .task-status.pending-task .task-duration { background: rgba(210, 153, 34, 0.12); color: #d29922; }
+
+  @keyframes pulse-blue {
+    0%, 100% { box-shadow: 0 0 4px rgba(88, 166, 255, 0.3); }
+    50% { box-shadow: 0 0 14px rgba(88, 166, 255, 0.5); }
+  }
+
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 4px rgba(248, 81, 73, 0.3); }
+    50% { box-shadow: 0 0 14px rgba(248, 81, 73, 0.6); }
+  }
+
+  .task-indicator {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .task-indicator.idle { background: #484f58; }
+  .task-indicator.working { background: #58a6ff; box-shadow: 0 0 6px #58a6ff; animation: pulse-blue 2s infinite; }
+  .task-indicator.stalled { background: #f85149; box-shadow: 0 0 6px #f85149; animation: pulse-red 1.5s infinite; }
+  .task-indicator.pending-task { background: #d29922; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 24px;
+    color: #484f58;
+    font-size: 0.85rem;
+  }
+
+  .footer span { color: #6e7681; }
+
+  .footer-refresh {
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: #484f58;
+  }
+
+  .refresh-countdown {
+    color: #58a6ff;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header: title left, numbers right -->
+<div class="header">
+  <div class="header-left">
+    <h1>Grotap Agent Cluster</h1>
+    <div class="subtitle">Hetzner Cloud + Dedicated &mdash; Ashburn + Hillsboro + Helsinki</div>
+  </div>
+  <div class="summary-bar">
+    <div class="summary-item">
+      <div class="summary-value total">11</div>
+      <div class="summary-label">Servers</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-value running">10</div>
+      <div class="summary-label">Running</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-value pending">0</div>
+      <div class="summary-label">Pending</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-value active" id="active-tasks-count">0</div>
+      <div class="summary-label">Tasks</div>
+    </div>
+  </div>
+</div>
+
+<!-- Server Grid -->
+<div class="server-grid">
+
+  <!-- Department: Software Development -->
+  <div class="dept-header">
+    <span class="dept-label software">Software Development</span>
+    <div class="dept-line"></div>
+  </div>
+
+  <!-- Agent-01 -->
+  <div class="server-card running" data-agent="agent-01">
+    <div class="card-header">
+      <div class="server-name">Agent-01</div>
+      <div class="status-badge running"><span class="status-dot running"></span> Running</div>
+    </div>
+    <div class="task-status idle" id="task-agent-01">
+      <div class="task-name"><span class="task-indicator idle"></span>Idle</div>
+      <span class="task-duration">&mdash;</span>
+    </div>
+    <div class="modules-section">
+      <div class="module-group">
+        <div class="module-name">execution</div>
+        <div class="roles">
+          <span class="role-badge">Execute (primary)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent-02 -->
+  <div class="server-card running" data-agent="agent-02">
+    <div class="card-header">
+      <div class="server-name">Agent-02</div>
+      <div class="status-badge running"><span class="status-dot running"></span> Running</div>
+    </div>
+    <div class="task-status idle" id="task-agent-02">
+      <div class="task-name"><span class="task-indicator idle"></span>Idle</div>
+      <span class="task-duration">&mdash;</span>
+    </div>
+    <div class="modules-section">
+      <div class="module-group">
+        <div class="module-name">intake</div>
+        <div class="roles">
+          <span class="role-badge">Intake</span>
+          <span class="role-badge">Triage</span>
+        </div>
+      </div>
+      <div class="module-group">
+        <div class="module-name">security</div>
+        <div class="roles">
+          <span class="role-badge">Security Reviewer</span>
+        </div>
+      </div>
+      <div class="module-group">
+        <div class="module-name">execution (overflow)</div>
+        <div class="roles">
+          <span class="role-badge overflow">Execute &mdash; when idle</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent-03 -->
+  <div class="server-card running" data-agent="agent-03">
+    <div class="card-header">
+      <div class="server-name">Agent-03</div>
+      <div class="status-badge running"><span class="status-dot running"></span> Running</div>
+    </div>
+    <div class="task-status idle" id="task-agent-03">
+      <div class="task-name"><span class="task-indicator idle"></span>Idle</div>
+      <span class="task-duration">&mdash;</span>
+    </div>
+    <div class="modules-section">
+      <div class="module-group">
+        <div class="module-name">planning</div>
+        <div class="roles">
+          <span class="role-badge">Planner</span>
+        </div>
+      </div>
+      <div class="module-group">
+        <div class="module-name">review</div>
+        <div class="roles">
+          <span class="role-badge">Fix Reviewer</span>
+          <span class="role-badge">Policy Reviewer</span>
+          <span class="role-badge">Logic Reviewer</span>
+          <span class="role-badge">Perf Reviewer</span>
+        </div>
+      </div>
+      <div class="module-group">
+        <div class="module-name">execution (overflow)</div>
+        <div class="roles">
+          <span class="role-badge overflow">Execute &mdash; when idle</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent-04 -->
+  <div class="server-card running" data-agent="agent-04">
+    <div class="card-header">
+      <div class="server-name">Agent-04</div>
+      <div class="status-badge running"><span class="status-dot running"></span> Running</div>
+    </div>
+    <div class="task-status idle" id="task-agent-04">
+      <div class="task-name"><span class="task-indicator idle"></span>Idle</div>
+      <span class="task-duration">&mdash;</span>
+    </div>
+    <div class="modules-section">
+      <div class="module-group">
+        <div class="module-name">execution</div>
+        <div class="roles">
+          <span class="role-badge">Execute</span>
+        </div>
+      </div>
+      <div class="module-group">
+        <div class="module-name">enforcement</div>
+        <div class="roles">
+          <span class="role-badge">Change Reviewer</span>
+          <span class="role-badge">Rule Enforcer</span>
+          <span class="role-badge">Build Validator</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent-05 -->
+  <div class="server-card running" data-agent="agent-05">
+    <div class="card-header">
+      <div class="server-name">Agent-05</div>
+      <div class="status-badge running"><span class="status-dot running"></span> Running</div>
+    </div>
+    <div class="task-status idle" id="task-agent-05">
+      <div class="task-name"><span class="task-indicator idle"></span>Idle</div>
+      <span class="task-duration">&mdash;</span>
+    </div>
+    <div class="modules-section">
+      <div class="module-group">
+        <div class="module-name">pipeline</div>
+        <div class="roles">
+          <span class="role-badge">Pipeline Detail</span>
+        </div>
+      </div>
+      <div class="module-group">
+        <div class="module-name">approvals</div>
+        <div class="roles">
+          <span class="role-badge">Audit Filters</span>
+          <span class="role-badge">Mobile Approvals</span>
+        </div>
+      </div>
+      <div class="module-group">
+        <div class="module-name">execution (overflow)</div>
+        <div class="roles">
+          <span class="role-badge overflow">Execute &mdash; when idle</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent-06 -->
+  <div class="server-card running" data-agent="agent-06">
+    <div class="card-header">
+      <div class="server-name">Agent-06</div>
+      <div class="status-badge running"><span class="status-dot running"></span> Running</div>
+    </div>
+    <div class="task-status idle" id="task-agent-06">
+      <div class="task-name"><span class="task-indicator idle"></span>Idle</div>
+      <span class="task-duration">&mdash;</span>
+    </div>
+    <div class="modules-section">
+      <div class="module-group">
+        <div class="module-name">deploy</div>
+        <div class="roles">
+          <span class="role-badge">Deploy Verifier</span>
+          <span class="role-badge">Deploy Executor</span>
+        </div>
+      </div>
+      <div class="module-group">
+        <div class="module-name">ops / monitoring</div>
+        <div class="roles">
+          <span class="role-badge">Env Validator</span>
+          <span class="role-badge">Health Monitor</span>
+          <span class="role-badge">DNS Watchdog</span>
+          <span class="role-badge">Post-Deploy QA</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent-07 -->
+  <div class="server-card running" data-agent="agent-07">
+    <div class="card-header">
+      <div class="server-name">Agent-07</div>
+      <div class="status-badge running"><span class="status-dot running"></span> Running</div>
+    </div>
+    <div class="task-status idle" id="task-agent-07">
+      <div class="task-name"><span class="task-indicator idle"></span>Idle</div>
+      <span class="task-duration">&mdash;</span>
+    </div>
+    <div class="modules-section">
+      <div class="module-group">
+        <div class="module-name">execution</div>
+        <div class="roles">
+          <span class="role-badge">Execute (primary)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent-08 -->
+  <div class="server-card running" data-agent="agent-08">
+    <div class="card-header">
+      <div class="server-name">Agent-08</div>
+      <div class="status-badge running"><span class="status-dot running"></span> Running</div>
+    </div>
+    <div class="task-status idle" id="task-agent-08">
+      <div class="task-name"><span class="task-indicator idle"></span>Idle</div>
+      <span class="task-duration">&mdash;</span>
+    </div>
+    <div class="modules-section">
+      <div class="module-group">
+        <div class="module-name">execution</div>
+        <div class="roles">
+          <span class="role-badge">Execute (primary)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent-09 -->
+  <div class="server-card running" data-agent="agent-09">
+    <div class="card-header">
+      <div class="server-name">Agent-09</div>
+      <div class="status-badge running"><span class="status-dot running"></span> Running</div>
+    </div>
+    <div class="task-status idle" id="task-agent-09">
+      <div class="task-name"><span class="task-indicator idle"></span>Idle</div>
+      <span class="task-duration">&mdash;</span>
+    </div>
+    <div class="modules-section">
+      <div class="module-group">
+        <div class="module-name">execution</div>
+        <div class="roles">
+          <span class="role-badge">Execute (primary)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent-10 -->
+  <div class="server-card running" data-agent="agent-10">
+    <div class="card-header">
+      <div class="server-name">Agent-10</div>
+      <div class="status-badge running"><span class="status-dot running"></span> Running</div>
+    </div>
+    <div class="task-status idle" id="task-agent-10">
+      <div class="task-name"><span class="task-indicator idle"></span>Idle</div>
+      <span class="task-duration">&mdash;</span>
+    </div>
+    <div class="modules-section">
+      <div class="module-group">
+        <div class="module-name">execution</div>
+        <div class="roles">
+          <span class="role-badge">Execute (primary)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Department: Marketing -->
+  <div class="dept-header">
+    <span class="dept-label marketing">Marketing</span>
+    <div class="dept-line"></div>
+  </div>
+
+  <!-- Agent-11 -->
+  <div class="server-card running" data-agent="agent-11">
+    <div class="card-header">
+      <div class="server-name">Agent-11</div>
+      <div class="status-badge running"><span class="status-dot running"></span> Running</div>
+    </div>
+    <div class="task-status idle" id="task-agent-11">
+      <div class="task-name"><span class="task-indicator idle"></span>Idle</div>
+      <span class="task-duration">&mdash;</span>
+    </div>
+    <div class="modules-section">
+      <div class="module-group">
+        <div class="module-name">social media</div>
+        <div class="roles">
+          <span class="role-badge marketing">Instagram</span>
+          <span class="role-badge marketing">Facebook</span>
+          <span class="role-badge marketing">YouTube</span>
+          <span class="role-badge marketing">TikTok</span>
+        </div>
+      </div>
+      <div class="module-group">
+        <div class="module-name">platform</div>
+        <div class="roles">
+          <span class="role-badge marketing">Squarespace</span>
+          <span class="role-badge marketing">Ayrshare</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  Hetzner Cloud (Ashburn): <span>5 servers</span> &mdash; Cloud (Hillsboro + Helsinki): <span>3 servers</span> &mdash; Dedicated EX44 (Helsinki): <span>3 servers</span>
+  <div class="footer-refresh">
+    Last refreshed: <span id="last-refreshed">&mdash;</span> &mdash; Next refresh in <span class="refresh-countdown" id="refresh-countdown">2</span>s
+  </div>
+</div>
+
+<script>
+const STATUS_URL = "http://localhost:7654";
+const POLL_INTERVAL = 2000;
+let lastData = null;
+let connected = false;
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+function renderAgent(agent) {
+  const el = document.getElementById("task-" + agent.name);
+  if (!el) return;
+
+  if (agent.state === "unreachable") {
+    el.className = "task-status stalled";
+    el.innerHTML = '<div class="task-name"><span class="task-indicator stalled"></span>Unreachable</div><span class="task-duration">SSH timeout</span>';
+    return;
+  }
+
+  if (!agent.tasks || agent.tasks.length === 0) {
+    el.className = "task-status idle";
+    el.innerHTML = '<div class="task-name"><span class="task-indicator idle"></span>Idle — ' + agent.slots_used + '/' + agent.slots_max + ' slots</div><span class="task-duration">&mdash;</span>';
+    return;
+  }
+
+  el.className = "task-status working";
+  const taskList = agent.tasks.map(t => '#' + t.task_id).join(', ');
+  el.innerHTML =
+    '<div class="task-name"><span class="task-indicator working"></span>' +
+    escapeHtml(agent.slots_used + '/' + agent.slots_max + ' slots — ' + taskList) + '</div>' +
+    '<span class="task-duration">' + agent.slots_used + ' running</span>';
+}
+
+async function poll() {
+  try {
+    const res = await fetch(STATUS_URL);
+    const data = await res.json();
+    lastData = data;
+    connected = true;
+
+    let totalActive = 0;
+    for (const agent of data.agents) {
+      renderAgent(agent);
+      totalActive += (agent.slots_used || 0);
+    }
+
+    document.getElementById("active-tasks-count").textContent = totalActive;
+    document.getElementById("last-refreshed").textContent = new Date().toLocaleTimeString();
+    document.getElementById("refresh-countdown").textContent = (POLL_INTERVAL / 1000).toFixed(0);
+  } catch (err) {
+    if (connected) {
+      connected = false;
+    }
+    document.getElementById("last-refreshed").textContent = "Disconnected — start: node platform/agents/status-server.js";
+  }
+}
+
+poll();
+setInterval(poll, POLL_INTERVAL);
+</script>
+
+</body>
+</html>

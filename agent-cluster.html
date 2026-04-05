@@ -68,6 +68,90 @@
   .summary-value.running { color: #3fb950; }
   .summary-value.pending { color: #d29922; }
   .summary-value.active { color: #58a6ff; }
+  .summary-value.claude { color: #ef4444; }
+  .summary-value.cost { color: #ec4899; }
+
+  /* Activity panel */
+  .activity-panel {
+    margin-bottom: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .activity-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: #161b22;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    cursor: pointer;
+  }
+  .activity-header:hover { background: #1c2129; }
+  .activity-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .activity-status {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 3px 12px;
+    border-radius: 999px;
+  }
+  .activity-status.idle { background: rgba(63,185,80,0.12); color: #3fb950; }
+  .activity-status.active { background: rgba(239,68,68,0.15); color: #fca5a5; animation: pulse-bg 2s infinite; }
+  @keyframes pulse-bg { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+  .activity-body {
+    background: #161b22;
+    padding: 14px 18px;
+  }
+  .alert-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    margin-bottom: 4px;
+  }
+  .alert-row.danger { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; }
+  .alert-row.warn { background: rgba(234,179,8,0.08); border: 1px solid rgba(234,179,8,0.2); color: #fde68a; }
+  .alert-row.ok { background: rgba(63,185,80,0.08); border: 1px solid rgba(63,185,80,0.2); color: #86efac; }
+  .alert-icon { font-size: 1rem; flex-shrink: 0; }
+  .claude-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    background: rgba(239,68,68,0.15);
+    color: #fca5a5;
+    border: 1px solid rgba(239,68,68,0.3);
+    margin-left: 6px;
+  }
+  .svc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    background: rgba(249,115,22,0.12);
+    color: #fdba74;
+    border: 1px solid rgba(249,115,22,0.3);
+    margin-left: 6px;
+  }
 
   /* Department section headers */
   .dept-header {
@@ -350,10 +434,34 @@
       <div class="summary-value active" id="active-tasks-count">0</div>
       <div class="summary-label">Tasks</div>
     </div>
+    <div class="summary-item">
+      <div class="summary-value claude" id="claude-procs-count">0</div>
+      <div class="summary-label">Claude Procs</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-value cost" id="est-cost">$0</div>
+      <div class="summary-label">Est. Daily Cost</div>
+    </div>
   </div>
 </div>
 
 <!-- Server Grid -->
+<!-- API Activity Panel -->
+<div class="activity-panel" id="activity-panel">
+  <div class="activity-header" onclick="document.getElementById('activity-body').style.display = document.getElementById('activity-body').style.display === 'none' ? 'block' : 'none'">
+    <div class="activity-title">
+      <span>API Activity Monitor</span>
+      <span class="activity-status idle" id="activity-status">Idle</span>
+    </div>
+    <span style="color: #8b949e; font-size: 0.8rem;" id="activity-toggle">Click to expand</span>
+  </div>
+  <div class="activity-body" id="activity-body" style="display:none">
+    <div id="activity-alerts">
+      <div class="alert-row ok"><span class="alert-icon">&#10003;</span> Checking servers...</div>
+    </div>
+  </div>
+</div>
+
 <div class="server-grid">
 
   <!-- Department: Software Development -->
@@ -689,9 +797,26 @@ function renderAgent(agent) {
     return;
   }
 
+  // Build extra badges for claude procs and systemd services
+  let badges = "";
+  const claudeCount = (agent.claude_procs || []).length;
+  if (claudeCount > 0) {
+    badges += '<span class="claude-badge">' + claudeCount + ' Claude</span>';
+  }
+  const services = agent.systemd_services || [];
+  services.forEach(s => {
+    if (/dispatch|watchdog/i.test(s)) {
+      badges += '<span class="svc-badge">' + escapeHtml(s.replace('.service', '')) + '</span>';
+    }
+  });
+
   if (!agent.tasks || agent.tasks.length === 0) {
-    el.className = "task-status idle";
-    el.innerHTML = '<div class="task-name"><span class="task-indicator idle"></span>Idle — ' + agent.slots_used + '/' + agent.slots_max + ' slots</div><span class="task-duration">&mdash;</span>';
+    const statusText = claudeCount > 0 ? "API Active" : "Idle";
+    const indicator = claudeCount > 0 ? "working" : "idle";
+    el.className = "task-status " + indicator;
+    el.innerHTML = '<div class="task-name"><span class="task-indicator ' + indicator + '"></span>' +
+      statusText + ' &mdash; ' + agent.slots_used + '/' + agent.slots_max + ' slots' + badges +
+      '</div><span class="task-duration">' + (agent.load ? 'Load: ' + agent.load : '&mdash;') + '</span>';
     return;
   }
 
@@ -699,7 +824,7 @@ function renderAgent(agent) {
   const taskList = agent.tasks.map(t => '#' + t.task_id).join(', ');
   el.innerHTML =
     '<div class="task-name"><span class="task-indicator working"></span>' +
-    escapeHtml(agent.slots_used + '/' + agent.slots_max + ' slots — ' + taskList) + '</div>' +
+    escapeHtml(agent.slots_used + '/' + agent.slots_max + ' slots — ' + taskList) + badges + '</div>' +
     '<span class="task-duration">' + agent.slots_used + ' running</span>';
 }
 
@@ -711,14 +836,54 @@ async function poll() {
     connected = true;
 
     let totalActive = 0;
+    let totalClaude = 0;
     for (const agent of data.agents) {
       renderAgent(agent);
       totalActive += (agent.slots_used || 0);
+      totalClaude += (agent.claude_procs || []).length;
     }
 
     document.getElementById("active-tasks-count").textContent = totalActive;
     document.getElementById("last-refreshed").textContent = new Date().toLocaleTimeString();
     document.getElementById("refresh-countdown").textContent = (POLL_INTERVAL / 1000).toFixed(0);
+
+    // Update Claude process count and estimated cost
+    const claudeEl = document.getElementById("claude-procs-count");
+    claudeEl.textContent = totalClaude;
+    claudeEl.style.color = totalClaude > 0 ? "#ef4444" : "#3fb950";
+
+    // Rough estimate: each active Claude process ~ $10/hr (Opus) or $3/hr (Sonnet)
+    const hourlyRate = 5; // conservative avg
+    const estDaily = totalClaude * hourlyRate * 24;
+    const costEl = document.getElementById("est-cost");
+    costEl.textContent = totalClaude > 0 ? "$" + estDaily.toLocaleString() : "$0";
+    costEl.style.color = estDaily > 100 ? "#ef4444" : estDaily > 0 ? "#eab308" : "#3fb950";
+
+    // Update activity panel
+    const statusEl = document.getElementById("activity-status");
+    const alertsEl = document.getElementById("activity-alerts");
+    const alerts = data.alerts || [];
+
+    if (totalClaude > 0 || alerts.some(a => a.level === "danger")) {
+      statusEl.textContent = totalClaude + " Claude Active";
+      statusEl.className = "activity-status active";
+      // Auto-expand when there's activity
+      document.getElementById("activity-body").style.display = "block";
+      document.getElementById("activity-toggle").textContent = "Click to collapse";
+    } else {
+      statusEl.textContent = "Idle — No API Usage";
+      statusEl.className = "activity-status idle";
+    }
+
+    if (alerts.length > 0) {
+      alertsEl.innerHTML = alerts.map(a =>
+        '<div class="alert-row ' + a.level + '"><span class="alert-icon">' +
+        (a.level === "danger" ? "&#9650;" : a.level === "warn" ? "!" : "&#10003;") +
+        '</span> ' + escapeHtml(a.msg) + '</div>'
+      ).join("");
+    } else {
+      alertsEl.innerHTML = '<div class="alert-row ok"><span class="alert-icon">&#10003;</span> All servers idle &mdash; no API tokens being consumed</div>';
+    }
   } catch (err) {
     if (connected) {
       connected = false;
